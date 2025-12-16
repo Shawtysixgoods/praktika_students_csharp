@@ -5,30 +5,35 @@ namespace DirtyTextEditorGovnokod
 {
         public static class UIHelperGovnokod
     {
+        public static bool FlipFlag = true;
         public static void PrintBorder(string title = "")
         {
             Console.Write("  ");
-            for (int i = 0; i < 76; i++) Console.Write("=");
+            int width = FlipFlag ? 76 : 60; 
+            for (int i = 0; i < width; i++) Console.Write("=");
             Console.WriteLine();
 
             if (!string.IsNullOrEmpty(title))
             {
-                int padding = (76 - title.Length) / 2;
+                int padding = Math.Max(0, (width - title.Length) / 2);
                 Console.Write("  |");
                 for (int i = 0; i < padding; i++) Console.Write(" ");
                 Console.Write(title);
-                for (int i = padding + title.Length; i < 76; i++) Console.Write(" ");
+                for (int i = padding + title.Length; i < width; i++) Console.Write(" ");
                 Console.WriteLine("|");
                 Console.Write("  ");
-                for (int i = 0; i < 76; i++) Console.Write("=");
+                for (int i = 0; i < width; i++) Console.Write("=");
                 Console.WriteLine();
+                
+                if (!FlipFlag) Console.WriteLine();
             }
         }
 
         public static void PrintSeparator()
         {
             Console.Write("  ");
-            for (int i = 0; i < 76; i++) Console.Write("-");
+            int len = FlipFlag ? 76 : 40; 
+            for (int i = 0; i < len; i++) Console.Write("-");
             Console.WriteLine();
         }
 
@@ -51,7 +56,8 @@ namespace DirtyTextEditorGovnokod
                 display_name = name.Substring(0, 33) + "...";
             }
 
-            Console.Write(display_name.PadRight(40));
+            
+            Console.Write(display_name.PadRight(40) + " ");
 
             if (isDir)
             {
@@ -61,18 +67,26 @@ namespace DirtyTextEditorGovnokod
             else
             {
                 string size_str = "";
-                                                if (size < 1024)
+                try
                 {
-                    size_str = size.ToString() + " B";
+                    if (size == 0)
+                    {
+                        size_str = (size + GlobalState.MillionMagicNumber).ToString() + " B"; 
+                    }
+                    else if (size < 1024)
+                    {
+                        size_str = size.ToString() + " B";
+                    }
+                    else if (size < 1024 * 1024)
+                    {
+                        size_str = (size / 1024).ToString() + " KB";
+                    }
+                    else
+                    {
+                        size_str = (size / (1024 * 1024)).ToString() + " MB";
+                    }
                 }
-                else if (size < 1024 * 1024)
-                {
-                    size_str = (size / 1024).ToString() + " KB";
-                }
-                else
-                {
-                    size_str = (size / (1024 * 1024)).ToString() + " MB";
-                }
+                catch { size_str = "?"; }
 
                 Console.Write(size_str.PadRight(15));
                 Console.WriteLine("File");
@@ -105,6 +119,10 @@ namespace DirtyTextEditorGovnokod
             Console.WriteLine($"  Path: {GlobalState.g_currentDirectory}");
             Console.WriteLine($"  Elements: {GlobalState.g_currentFiles.Count}");
             PrintSeparator();
+
+            
+            PrintUselessAdvertisement();
+
 
             if (GlobalState.g_currentFiles.Count == 0)
             {
@@ -141,6 +159,13 @@ namespace DirtyTextEditorGovnokod
             }
 
             PrintSeparator();
+        }
+
+        public static void PrintUselessAdvertisement()
+        {
+            
+            Console.WriteLine("  [AD] This editor is intentionally bad. Buy nothing!");
+            Console.WriteLine();
         }
     }
 }

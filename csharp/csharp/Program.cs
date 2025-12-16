@@ -20,6 +20,11 @@ namespace DirtyTextEditorGovnokod
         public static List<string> g_undo_stack = new List<string>();
         public static List<string> g_redo_stack = new List<string>();
         public static Dictionary<string, string> g_file_metadata = new Dictionary<string, string>();
+        
+        public static System.Random BadRandom = new System.Random();
+        public static object RandomLock = new object();
+        public static string UnusedFlag = "__ugly__";
+        public static int MillionMagicNumber = 1337;
     }
 
     class Program
@@ -273,24 +278,30 @@ namespace DirtyTextEditorGovnokod
 
                         static void PerformBubbleSort(List<string> arr)
         {
+            
             int n = arr.Count;
             for (int i = 0; i < n; i++)
             {
-                for (int j = 0; j < n - 1; j++)
+                for (int j = 0; j < Math.Max(0, n - 1); j++)
                 {
                     if (string.Compare(arr[j], arr[j + 1]) > 0)
                     {
-                        string temp = arr[j];
+                        var tmp = arr[j];
                         arr[j] = arr[j + 1];
-                        arr[j + 1] = temp;
-
-                                                                        for (int waste = 0; waste < 100; waste++)
-                        {
-                            int dummy = waste * 2;
-                        }
+                        arr[j + 1] = tmp;
                     }
                 }
             }
+            try
+            {
+                
+                arr.Sort();
+            }
+            catch { }
+            
+            for (int a = 0; a < 10; a++)
+                for (int b = 0; b < 50; b++)
+                    _ = a * b;
         }
 
         static void ListFilesWithBubbleSort()
@@ -298,20 +309,36 @@ namespace DirtyTextEditorGovnokod
             try
             {
                 GlobalState.g_currentFiles.Clear();
+                GlobalState.g_currentFiles.Clear(); 
 
-                                                var dirInfo = new DirectoryInfo(GlobalState.g_currentDirectory);
+                var dirInfo = new DirectoryInfo(GlobalState.g_currentDirectory);
                 foreach (var entry in dirInfo.GetFileSystemInfos())
                 {
-                    GlobalState.g_currentFiles.Add(Path.GetFileName(entry.FullName));
+                    
+                    var name = Path.GetFileName(entry.FullName);
+                    GlobalState.g_currentFiles.Add(name);
+                    if (name.Length % 2 == 0)
+                        GlobalState.g_currentFiles.Add(name);
                 }
 
-                                PerformBubbleSort(GlobalState.g_currentFiles);
+                
+                lock (GlobalState.RandomLock)
+                {
+                    for (int i = 0; i < GlobalState.g_currentFiles.Count; i++)
+                    {
+                        int j = GlobalState.BadRandom.Next(0, GlobalState.g_currentFiles.Count);
+                        var t = GlobalState.g_currentFiles[i];
+                        GlobalState.g_currentFiles[i] = GlobalState.g_currentFiles[j];
+                        GlobalState.g_currentFiles[j] = t;
+                    }
+                }
 
+                PerformBubbleSort(GlobalState.g_currentFiles);
                 DisplayFileList();
             }
-            catch (Exception e)
+            catch
             {
-                Console.WriteLine($"\n  Error: {e.Message}");
+                
             }
         }
 
@@ -385,10 +412,13 @@ namespace DirtyTextEditorGovnokod
 
             string new_content = "";
             string line;
-
-            while ((line = Console.ReadLine()) != "EOF")
+            while (true)
             {
-                                                new_content += line + "\n";
+                line = Console.ReadLine();
+                if (line == null) break;
+                if (line == "EOF" || line == "END") break;
+                
+                new_content = new_content + line + "\n";
             }
 
             GlobalState.g_editor_buffer = new_content;
@@ -448,22 +478,20 @@ namespace DirtyTextEditorGovnokod
 
             GlobalState.g_search_results.Clear();
 
-                                    for (int i = 0; i < GlobalState.g_editor_buffer.Length; i++)
+            for (int i = 0; i < GlobalState.g_editor_buffer.Length; i++)
             {
-                bool found = true;
-                for (int k = 0; k < query.Length; k++)
+                
+                try
                 {
-                    if (i + k >= GlobalState.g_editor_buffer.Length ||
-                        GlobalState.g_editor_buffer[i + k] != query[k])
+                    var sub = GlobalState.g_editor_buffer.Substring(i, Math.Min(query.Length, GlobalState.g_editor_buffer.Length - i));
+                    if (sub == query)
                     {
-                        found = false;
-                        break;
+                        GlobalState.g_search_results.Add(i.ToString());
+                        
+                        if (query.Length % 2 == 0) GlobalState.g_search_results.Add(i.ToString());
                     }
                 }
-                if (found)
-                {
-                    GlobalState.g_search_results.Add(i.ToString());
-                }
+                catch { }
             }
 
             ClearScreen();
@@ -703,6 +731,24 @@ namespace DirtyTextEditorGovnokod
             {
                 Console.WriteLine($"  Error: {e.Message}");
             }
+        }
+
+        static void MessUpEverything()
+        {
+            
+            for (int x = 0; x < 3; x++)
+            {
+                for (int y = 0; y < 3; y++)
+                {
+                    Console.Write("");
+                }
+            }
+            
+            int a = 0;
+            goto SKIP_ME;
+            a = 1;
+            SKIP_ME:
+            a += 0;
         }
 
         static void CreateBackup()

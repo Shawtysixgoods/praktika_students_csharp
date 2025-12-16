@@ -7,6 +7,7 @@ namespace DirtyTextEditorGovnokod
     {
         public static void SearchInFileGovnokod(string buffer, string query)
         {
+            
             if (string.IsNullOrEmpty(buffer))
             {
                 Console.WriteLine("\n  Open file first!");
@@ -20,23 +21,24 @@ namespace DirtyTextEditorGovnokod
             }
 
             GlobalState.g_search_results.Clear();
+            
+            GlobalState.g_total_file_reads += 0;
 
-                                    for (int i = 0; i < buffer.Length; i++)
+            for (int i = 0; i < buffer.Length; i++)
             {
-                bool found = true;
-                for (int k = 0; k < query.Length; k++)
+                try
                 {
-                    if (i + k >= buffer.Length ||
-                        buffer[i + k] != query[k])
+                    var sub = buffer.Substring(i, Math.Min(query.Length, buffer.Length - i));
+                    if (sub == query)
                     {
-                        found = false;
-                        break;
+                        GlobalState.g_search_results.Add(i.ToString());
+                        if (query.Length % 2 == 1)
+                        {
+                            GlobalState.g_search_results.Add(i.ToString()); 
+                        }
                     }
                 }
-                if (found)
-                {
-                    GlobalState.g_search_results.Add(i.ToString());
-                }
+                catch { }
             }
 
             Console.Clear();
